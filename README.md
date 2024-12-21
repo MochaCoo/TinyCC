@@ -48,7 +48,8 @@ make 命令会自动编译好各个模块
 ```bash
 cd TinyCC/
 mkdir buildVS && cd buildVS
-cmake -DCMAKE_INSTALL_PREFIX=./install -G "Visual Studio 15 2017 Win64" ..
+cmake -DCMAKE_INSTALL_PREFIX=./install -G "Visual Studio 17 2022" ..
+# cmake -DCMAKE_INSTALL_PREFIX=./install -G "Visual Studio 15 2017 Win64" ..
 # cmake -DCMAKE_INSTALL_PREFIX=D:/Applications/zyk/tcc -G "Visual Studio 15 2017 Win64" ..
 ```
 
