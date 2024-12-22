@@ -19,8 +19,18 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 
 add_subdirectory(libtcc)
 add_subdirectory(tcc)
+
+add_custom_target(CopyLibtcc ALL)
+add_dependencies(CopyLibtcc libtcc)
+
+add_custom_command(TARGET CopyLibtcc POST_BUILD
+	# COMMAND ${CMAKE_COMMAND} -E echo "target dir = $<TARGET_FILE:libtcc> $<TARGET_FILE_DIR:tcc> $<TARGET_FILE:tcc>"
+	COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:libtcc>" "$<TARGET_FILE_DIR:tcc>"
+)
+
 if(WIN32)
-else(WIN32)
+	set(CC "$<TARGET_FILE:tcc>" CACHE STRING "path of tcc")
 	add_subdirectory(runtime)
+	add_dependencies(libtcc1 CopyLibtcc)
 endif(WIN32)
 add_subdirectory(demo)
