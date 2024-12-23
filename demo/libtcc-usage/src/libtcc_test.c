@@ -9,6 +9,10 @@
 
 #include "libtcc.h"
 
+static void recv_tcc_error(void* opaque, const char* msg) {
+  printf(opaque, msg);
+}
+
 /* this function is called by the generated code */
 int add(int a, int b) {
   return a + b;
@@ -18,13 +22,17 @@ int add(int a, int b) {
 const char hello[] = "Hello World!";
 
 // clang-format off
-char my_program[] =
+char first_c_source_code[] =
 "#include <tcclib.h>\n" /* include the "Simple libc header for TCC" */
 "extern int add(int a, int b);\n"
 "#ifdef _WIN32\n" /* dynamically linked data needs 'dllimport' */
 " __attribute__((dllimport))\n"
 "#endif\n"
 "extern const char hello[];\n"
+
+"extern void func(const char*);\n"
+"extern const char func_hello[];\n"
+
 "int fib(int n)\n"
 "{\n"
 "    if (n <= 2)\n"
@@ -35,10 +43,20 @@ char my_program[] =
 "\n"
 "int foo(int n)\n"
 "{\n"
+"    func(func_hello);"
 "    printf(\"%s\\n\", hello);\n"
 "    printf(\"fib(%d) = %d\\n\", n, fib(n));\n"
 "    printf(\"add(%d, %d) = %d\\n\", n, 2 * n, add(n, 2 * n));\n"
 "    return 0;\n"
+"}\n";
+
+char second_c_source_code[] =
+"#include <tcclib.h>\n"
+"const char func_hello[] = \"hello from func\\n\";\n"
+"void func(const char* p)\n"
+"{\n"
+"    printf(p);\n"
+"    return;"
 "}\n";
 // clang-format on
 
@@ -69,8 +87,15 @@ int main(int argc, char** argv) {
   /* MUST BE CALLED before any compilation */
   tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
 
-  if (tcc_compile_string(s, my_program) == -1)
+  tcc_set_error_func(s, "error 1: %s", recv_tcc_error);
+  if (tcc_compile_string(s, first_c_source_code) == -1)
     return 1;
+
+  tcc_set_error_func(s, "error 2: %s", recv_tcc_error);
+  if (tcc_compile_string(s, second_c_source_code) == -1)
+    return 1;
+
+  tcc_set_error_func(s, NULL, NULL);
 
   /* as a test, we add symbols that the compiled program can use.
      You may also open a dll with tcc_add_dll() and use symbols from that */
